@@ -1,0 +1,8 @@
+{
+    "GENERAL":{
+        "pageSetup": {
+            "paperSize": 9,
+            "orientation": "landscape"
+        }
+    }
+}
