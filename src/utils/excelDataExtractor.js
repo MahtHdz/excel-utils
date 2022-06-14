@@ -6,7 +6,7 @@ import ExcelJS from "exceljs"
 * @param {String} fields - fields selected to get the file columns.
 * @returns {Promise<Array>} - returns a promise with the data in the excel file.
 */
-const getData = async (filepath, sheetName, fields) => {
+const getDataFromOneSheet = async (filepath, sheetName, fields) => {
   let clientData = {}
   let fieldsArray = []
   let workSheet = null
@@ -15,7 +15,7 @@ const getData = async (filepath, sheetName, fields) => {
   // Getting the layout headers
   const fieldsName = Object.values(fields)
   // Initializing the fields flag array
-  fieldsName.map((field, index) => (fieldsFlag[index] = false))
+  fieldsName.forEach((field, index) => (fieldsFlag[index] = false))
   // Trying to get the workbook from excel file
   try { await workbook.xlsx.readFile(filepath) }
   catch (error) { return console.error(error) }
@@ -57,8 +57,40 @@ const getData = async (filepath, sheetName, fields) => {
   return clientData
 }
 
+const getDataFromAllSheets = async (filepath, sheetsFields) => {
+  let clientData = {}
+  //let worksheets = []
+  let sheetsFieldsFlag = []
+  let sheetsData = []
+  const workbook = new ExcelJS.Workbook()
+  // Getting the layout headers
+  const sheetsFieldsName = Object.values(sheetsFields)
+  // Initializing the fields flag array
+  sheetsFieldsName.forEach((sheet, index) => {
+    let fieldsFlag = []
+    sheet.forEach((field, index) => { fieldsFlag[index] = false })
+    sheetsFieldsFlag[index] = fieldsFlag
+  })
+  // Trying to get the workbook from excel file
+  try { await workbook.xlsx.readFile(filepath) }
+  catch (error) { return console.error(error) }
+  // Getting worksheet from the workbook
+  workbook.eachSheet((sheet, sheetId) => {
+    let fieldsArray = []
+    // Getting the raw data from fields and saving them into an array
+    for (let i = 1; i <= sheet.actualColumnCount; i++) {
+      fieldsArray.push(sheet.getColumn(i))
+    }
+    sheetsData.push([sheet.name, fieldsArray])
+    //worksheets.push(sheet)
+  })
+  console.log(sheetsData)
+  // return clientData
+}
+
 const excelDataExtractor = {
-    getData
+    getDataFromOneSheet,
+    getDataFromAllSheets
 }
 
 export default excelDataExtractor
