@@ -17,6 +17,21 @@ const tmpData = [
       15,
       32
     ]
+  },
+  {
+    "NAME":"Test",
+    "HEADERS_NAME":[
+      "Prueba 342",
+      "SET de prueba"
+    ],
+    "HEADERS_KEY":[
+      "Prueba1",
+      "Prueba4"
+    ],
+    "COLUMNS_WIDTH": [
+      15,
+      15
+    ]
   }
 ]
 
@@ -35,10 +50,14 @@ const getDataFromFile = async (req, res) => {
     const { filepath, sheetName, fields } = req.body
     let worksheetsData = []
     let worksheetOne = []
-    //const data = await excelDataExtractor.getDataFromAllSheets(filepath, sheetFields)
-    const data = await excelDataExtractor.getDataFromOneSheet(filepath, sheetName, fields)
-    worksheetsData.push(excelDataProcessing.genWorksheetRows(data))
+    const data = await excelDataExtractor.getDataFromAllSheets(filepath, sheetFields)
+    data.forEach(sheet => {
+      worksheetsData.push(excelDataProcessing.genSheetRows(sheet.fieldsData))
+    })
     await CreateExcel('result.xlsx', { WORKSHEETS: tmpData, DATA: worksheetsData })
+    //const data = await excelDataExtractor.getDataFromOneSheet(filepath, sheetName, fields)
+    //worksheetsData.push(excelDataProcessing.genWorksheetRows(data))
+    //await CreateExcel('result.xlsx', { WORKSHEETS: tmpData, DATA: worksheetsData })
     res.send(data)
 }
 
