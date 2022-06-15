@@ -1,4 +1,4 @@
-const genWorksheetRows = (data, mode="flexible") => {
+const genSheetRows = (data, mode="flexible") => {
   const fields = Object.keys(data)
   const rawData = Object.values(data)
   let rows = []
@@ -35,7 +35,7 @@ const genWorksheetRows = (data, mode="flexible") => {
 }
 
 const excelDataProcessing = {
-  genWorksheetRows
+  genSheetRows
 }
 
 export default excelDataProcessing
