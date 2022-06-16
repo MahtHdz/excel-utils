@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs"
 
+import excelBeautify from "./excelBeautify"
 import worksheetConfig from '../config/worksheetConfig.json'
 
 /**
@@ -43,6 +44,45 @@ const CreateExcel = async (filepath, excelConstructor) => {
     worksheet.forEach(row => {
       let excelRow = worksheets[index].addRow({
         ...row
+      })
+    })
+  })
+
+  /********* Styling the worksheets *********/
+  let headersConfig = {
+    fgColor: "ff0000",
+    bgColor: "ffffff",
+    rowHeight: 40
+  }
+  worksheets.forEach((worksheet, index) => {
+    // Setting headers style
+    headersConfig.columnsNo = worksheet.columns.length
+    excelBeautify.styleHeaders(worksheet, headersConfig)
+    // Center all text
+    excelConstructor.WORKSHEETS[index].HEADERS_KEY.forEach(key => {
+      const column = worksheet.getColumnKey(key)
+/*       if(key !== 'razonSocial') column.eachCell((cell, rowNumber) => {
+        cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true
+        }
+      })
+      else column.eachCell((cell, rowNumber) => {
+        if(rowNumber===1) cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true
+        }
+        return
+      }) */
+      column.eachCell((cell, rowNumber) => {
+        if(rowNumber===1) cell.alignment = {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true
+        }
+        return
       })
     })
   })
