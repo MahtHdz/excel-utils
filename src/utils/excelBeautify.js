@@ -1,8 +1,16 @@
 /**
+ * @typedef {Object} cellAlignmentOptions
+ * @property {String} vertical - Vertical alignment
+ * @property {String} horizontal - Horizontal alignment
+ * @property {boolean} wrapText - Wrap text
+ */
+/**
  * @typedef {Object} BorderDrawOptions
  * @property {{row: Number, col: Number}} start
  * @property {{row: Number, col: Number}} end
  * @property {String} borderWidth
+ * @property {Object} color
+ * @property {String} color.argb
  */
 /**
  * @typedef {Object} FillCell_PatternOptions
@@ -28,12 +36,54 @@
  * @property {[GradientOptions_Stop]} stops
  */
 /**
- * @typedef {Object} FontSizeOptions
+ * @typedef {Object} FontOptions
  * @property {{row: Number, col: Number}} start
  * @property {{row: Number, col: Number}} end
- * @property {Number} fontSize
  * @property {string} fontType
+ * @property {Number} fontFamily
+ * @property {string} scheme
+ * @property {Number} charset
+ * @property {Number} fontSize
+ * @property {Object} color
+ * @property {string} color.argb
+ * @property {boolean} bold
+ * @property {boolean} italic
+ * @property {boolean | string} underline
+ * @property {boolean} strike
+ * @property {boolean} outline
+ * @property {string} vertAlign
  */
+/**
+ * @typedef {Object} StyleHeadersOptions
+ * @property {Object} columnsNo
+ * @property {Object} fillColor
+ * @property {Object} borderColor
+ * @property {Object} fontType
+ * @property {Object} fontColor
+ * @property {Object} fontFamily
+ * @property {Object} fontSize
+ * @property {Object} rowHeight
+ */
+
+/**
+ * @description
+ * @param {Object} worksheet
+ * @param {cellAlignmentOptions} options
+ * @returns {boolean}
+ */
+export const cellAlignmentForAllColumns = (
+  worksheet,
+  options = {
+    vertical: 'middle',
+    horizontal: 'center',
+    wrapText: true
+}) => {
+  for (let i = 1; i <= worksheet.actualColumnCount; i++) {
+    worksheet.getColumn(i).eachCell((cell, rowNumber) => {
+      cell.alignment = options
+    })
+  }
+}
 
 /**
  * @description Function to add a border style to a range of rows and columns
@@ -47,12 +97,12 @@ export const createOuterBorder = (
     start: { row: 1, col: 1 },
     end: { row: 1, col: 1 },
     borderWidth: "medium",
-    color: "000000"
+    color: { argb:"000000" }
   }
 ) => {
   const borderStyle = {
     style: options?.borderWidth,
-    color: { argb: options?.color },
+    color: options?.color,
   }
   for (let i = options?.start?.row; i <= options?.end?.row; i++) {
     const leftBorderCell = worksheet.getCell(i, options?.start?.col)
@@ -84,7 +134,7 @@ export const createOuterBorder = (
 /**
  * @description
  * @param {Object} worksheet
- * @param {FontSizeOptions} options
+ * @param {FontOptions} options
  * @returns {boolean}
  */
 export const changeFontProperties = (
@@ -93,14 +143,19 @@ export const changeFontProperties = (
     start: { row: 1, col: 1 },
     end: { row: 1, col: 1 },
     fontSize: 12,
-    fontType: "Calibri"
+    fontType: "Calibri",
+    family: fontFamily ?? 1,
+    color: { argb: "000000" }
   }
 ) => {
-  for (let i = options?.start.col; i <= options?.end.col; i++) {
-    for (let j = options?.start.row; j <= options?.end.row; j++) {
+  const { start, end, fontSize, fontType, fontFamily, ...rest } = options
+  for (let i = start?.col; i <= end?.col; i++) {
+    for (let j = start?.row; j <= end?.row; j++) {
       worksheet.getCell(j, i).font = {
-        name: options?.fontType,
-        size: options?.fontSize,
+        name: fontType ?? "Calibri",
+        size: fontSize ?? 12,
+        family: fontFamily ?? 1,
+        ...rest,
       }
     }
   }
@@ -125,9 +180,7 @@ export const fillCellsWithPattern = (
   if (!row && !column) return null
   if (row)
     row.eachCell((cell, colNumber) => {
-      console.log(cell)
       cell.fill = { type:"pattern", ...options }
-      console.log(cell)
     })
   if (column)
     column.eachCell((cell, colNumber) => {
@@ -154,16 +207,21 @@ export const fillCellWithPattern = (cell,
 
 /**
  * @description
- * @param
- * @returns
+ * @param {Object} worksheet
+ * @param {StyleHeadersOptions} options
+ * @returns {boolean}
  */
 export const styleHeaders = (
   worksheet,
   options = {
     columnsNo: 0,
-    fgColor: "000000",
-    bgColor: "ffffff",
-    rowHeight: 40
+    fillColor: "ffffff",
+    borderColor: "000000",
+    fontType: "Calibri",
+    fontColor: "000000",
+    fontFamily: 1,
+    fontSize: 14,
+    rowHeight: 20
 
   }
 ) => {
@@ -176,21 +234,23 @@ export const styleHeaders = (
       },
       end: {
         row: 1,
-        col: options.columnsNo,
+        col: options?.columnsNo ?? 0,
       },
-      fontSize: 14,
-      fontType: "Calibri",
+      fontSize: options?.fontSize ?? 14,
+      fontType: options?.fontType ?? "Calibri",
+      fontFamily: options?.fontFamily ?? 1,
+      color: { argb: options?.fontColor ?? "000000" },
     }
   )
-  worksheet.getRow(1).height = options.rowHeight
+  worksheet.getRow(1).height = options?.rowHeight ?? 20
   fillCellsWithPattern(worksheet.getRow(1), null,
     {
       pattern: "solid",
-      fgColor: { argb: options.fgColor },
-      bgColor: { argb: options.bgColor },
+      fgColor: { argb: options?.fillColor ?? "ffffff" },
+      bgColor: { argb: "ffffff" },
     }
   )
-  if (options.columnsNo) {
+  if (options?.columnsNo) {
     for (let i = 1; i <= options.columnsNo; i++) {
       createOuterBorder(
         worksheet,
@@ -204,6 +264,7 @@ export const styleHeaders = (
             col: i,
           },
           borderWidth: "medium",
+          color: { argb: options?.borderColor ?? "000000" },
         }
       )
     }
@@ -211,10 +272,12 @@ export const styleHeaders = (
 }
 
 const excelBeautify = {
-  createOuterBorder,
-  fillCellsWithPattern,
-  fillCellWithPattern,
-  changeFontProperties,
   styleHeaders,
+  createOuterBorder,
+  fillCellWithPattern,
+  fillCellsWithPattern,
+  changeFontProperties,
+  cellAlignmentForAllColumns,
 }
+
 export default excelBeautify
