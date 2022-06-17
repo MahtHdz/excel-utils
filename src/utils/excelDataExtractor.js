@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs"
+
 /**
 * @description This function is used to get the data from selected fields in a excel file
 * @param {String} filepath - path of the excel file.
@@ -62,6 +63,12 @@ const getDataFromOneSheet = async (filepath, sheetName, fields) => {
   return clientData
 }
 
+/**
+* @description This function is used to get the data from selected fields in a excel file
+* @param {String} filepath - path of the excel file.
+* @param {String} sheetsFields - sheet name where the data is located.
+* @returns {Promise<Array>} - returns a promise with the data in the excel file.
+*/
 const getDataFromAllSheets = async (filepath, sheetsFields) => {
   let sheetsFieldsData = []
   //let worksheets = []
