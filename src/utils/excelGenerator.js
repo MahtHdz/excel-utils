@@ -1,7 +1,6 @@
 import ExcelJS from "exceljs"
 
-import excelBeautify from "./excelBeautify"
-import worksheetConfig from '../config/worksheetConfig.json'
+import worksheetDefaultOptions from '../config/worksheetConfig.json'
 
 /**
  * @typedef {Object} worksheet
@@ -13,20 +12,29 @@ import worksheetConfig from '../config/worksheetConfig.json'
 
 /**
  * @description Function to create an excel file report
- * @param {String} filepath Path of the file to be exported
- * @param {Object} excelConstructor
- * @param {[worksheet]} excelConstructor.WORKSHEETS
- * @param {[Object]} excelConstructor.DATA
+ * @param {String} filepath - path of the file to be exported
+ * @param {Object} excelConstructor - object with the excel constructor parameters
+ * @param {[worksheet]} excelConstructor.WORKSHEETS_CONFIG - worksheets structure configuration
+ * @param {[Object]} excelConstructor.WORKSHEETS_DATA - worksheets data
+ * @param {[Object]} excelConstructor.WORKSHEETS_OPTIONS - worksheets constructor configuration
+ * @param {Function} customStyleFunction - custom function to style the excel sheets
  * @returns {Promise<boolean>} Return true if the file was created successfully
  */
-const CreateExcel = async (filepath, excelConstructor) => {
+const CreateExcel = async (filepath, excelConstructor, customStyleFunction) => {
+  let worksheets = []
+  let worksheetOptions = null
+  let worksheetsOptionsFlag = false
+
   // Initialize workbook
   const workbook = new ExcelJS.Workbook()
 
+  // Verify if worksheets options are defined
+  if (excelConstructor.WORKSHEETS_OPTIONS) worksheetsOptionsFlag = true
+
   // Building the worksheets
-  let worksheets = []
-  excelConstructor.WORKSHEETS.forEach((worksheet, index) => {
-    worksheets.push(workbook.addWorksheet(worksheet.NAME, worksheetConfig.GENERAL))
+  excelConstructor.WORKSHEETS_CONFIG.forEach((worksheet, index) => {
+    worksheetOptions = worksheetsOptionsFlag ? excelConstructor?.WORKSHEETS_OPTIONS[index] : worksheetDefaultOptions.GENERAL
+    worksheets.push(workbook.addWorksheet(worksheet.NAME, worksheetOptions))
     // Setting headers
     let columns = []
     worksheet.HEADERS_NAME.map((name, i) => {
@@ -40,7 +48,7 @@ const CreateExcel = async (filepath, excelConstructor) => {
   })
 
   // Data injection in the worksheets
-  excelConstructor.DATA.forEach((worksheet, index) => {
+  excelConstructor.WORKSHEETS_DATA.forEach((worksheet, index) => {
     worksheet.forEach(row => {
       let excelRow = worksheets[index].addRow({
         ...row
@@ -49,43 +57,7 @@ const CreateExcel = async (filepath, excelConstructor) => {
   })
 
   /********* Styling the worksheets *********/
-  let headersConfig = {
-    fgColor: "ff0000",
-    bgColor: "ffffff",
-    rowHeight: 40
-  }
-  worksheets.forEach((worksheet, index) => {
-    // Setting headers style
-    headersConfig.columnsNo = worksheet.columns.length
-    excelBeautify.styleHeaders(worksheet, headersConfig)
-    // Center all text
-    excelConstructor.WORKSHEETS[index].HEADERS_KEY.forEach(key => {
-      const column = worksheet.getColumnKey(key)
-/*       if(key !== 'razonSocial') column.eachCell((cell, rowNumber) => {
-        cell.alignment = {
-          vertical: 'middle',
-          horizontal: 'center',
-          wrapText: true
-        }
-      })
-      else column.eachCell((cell, rowNumber) => {
-        if(rowNumber===1) cell.alignment = {
-          vertical: 'middle',
-          horizontal: 'center',
-          wrapText: true
-        }
-        return
-      }) */
-      column.eachCell((cell, rowNumber) => {
-        if(rowNumber===1) cell.alignment = {
-          vertical: 'middle',
-          horizontal: 'center',
-          wrapText: true
-        }
-        return
-      })
-    })
-  })
+  if(customStyleFunction) customStyleFunction(worksheets)
 
   await workbook.xlsx.writeFile(filepath)
   console.log("File is written")
