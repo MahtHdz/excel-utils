@@ -1,6 +1,18 @@
 import CreateExcel from "../utils/excelGenerator"
+import myCustomStyleFunction from "../utils/customStyle"
 import excelDataExtractor from "../utils/excelDataExtractor"
 import excelDataProcessing from "../utils/excelDataProcessing"
+
+const sheetFields = {
+  Hoja1: [
+    "Enteros",
+    "Cadenas de texto"
+  ],
+  Hoja2: [
+    "Prueba1",
+    "Prueba4"
+  ]
+}
 
 const tmpData = [
   {
@@ -35,16 +47,20 @@ const tmpData = [
   }
 ]
 
-const sheetFields = {
-  Hoja1: [
-    "Enteros",
-    "Cadenas de texto"
-  ],
-  Hoja2: [
-    "Prueba1",
-    "Prueba4"
-  ]
-}
+const worksheetsConfig = [
+  {
+    "pageSetup": {
+      "paperSize": 9,
+      "orientation": "landscape"
+    }
+  },
+  {
+    "pageSetup": {
+      "paperSize": 9,
+      "orientation": "landscape"
+    }
+  }
+]
 
 const getDataFromFile = async (req, res) => {
     const { filepath, sheetName, fields } = req.body
@@ -54,7 +70,11 @@ const getDataFromFile = async (req, res) => {
     data.forEach(sheet => {
       worksheetsData.push(excelDataProcessing.genSheetRows(sheet.fieldsData))
     })
-    await CreateExcel('result.xlsx', { WORKSHEETS: tmpData, DATA: worksheetsData })
+    await CreateExcel('result.xlsx', {
+      WORKSHEETS_CONFIG: tmpData,
+      WORKSHEETS_DATA: worksheetsData,
+      WORKSHEETS_OPTIONS: worksheetsConfig
+    }, myCustomStyleFunction)
     //const data = await excelDataExtractor.getDataFromOneSheet(filepath, sheetName, fields)
     //worksheetsData.push(excelDataProcessing.genWorksheetRows(data))
     //await CreateExcel('result.xlsx', { WORKSHEETS: tmpData, DATA: worksheetsData })
