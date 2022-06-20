@@ -34,8 +34,15 @@ const genSheetRows = (data, mode="flexible") => {
   return rows
 }
 
+const genSheetRowsWithContext = (data, mode="flexible") => {
+  const fields = Object.keys(data)
+  const rows = genSheetRows(data, mode)
+  return { fields, rows }
+}
+
 const excelDataProcessing = {
-  genSheetRows
+  genSheetRows,
+  genSheetRowsWithContext
 }
 
 export default excelDataProcessing

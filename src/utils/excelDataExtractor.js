@@ -70,7 +70,7 @@ const getDataFromOneSheet = async (filepath, sheetName, fields) => {
 * @returns {Promise<Array>} - returns a promise with the data in the excel file.
 */
 const getDataFromAllSheets = async (filepath, sheetsFields) => {
-  let sheetsFieldsData = []
+  let extractedData = []
   //let worksheets = []
   let sheetsFieldsFlag = []
   let sheetsData = []
@@ -134,12 +134,50 @@ const getDataFromAllSheets = async (filepath, sheetsFields) => {
         })
       }
     })
-    sheetsFieldsData.push({ sheetName:sheet[0], fieldsData })
+    extractedData.push({ sheetName:sheet[0], fieldsData })
   })
-  return sheetsFieldsData
+  return extractedData
+}
+
+/**
+* @description This function is used to get all the data from the excel file
+* @param {String} filepath - path of the excel file.
+* @returns {Promise<Array>} - returns a promise with the data in the excel file.
+*/
+const getAllDataFromFile = async (filepath) => {
+  let extractedData = []
+  const workbook = new ExcelJS.Workbook()
+  // Trying to get the workbook from excel file
+  try { await workbook.xlsx.readFile(filepath) }
+  catch (error) { return console.error(error) }
+  // Getting worksheet from the workbook
+  workbook.eachSheet((sheet, sheetId) => {
+    let fieldsData = {}
+    if(sheet.name !== "Inicio"){
+      // Getting the raw data from fields and saving them into an array
+      for (let i = 1; i <= sheet.actualColumnCount; i++) {
+        let fieldName = null
+        sheet.getColumn(i).eachCell((cell, rowNumber) => {
+          if(rowNumber === 1) {
+            fieldName = cell.value
+            fieldsData[fieldName] = []
+          }
+          if(fieldName && rowNumber !== 1) {
+            if (cell.value instanceof Object)
+              fieldsData[fieldName].push(cell.value.result)
+            else if (cell.value !== null)
+              fieldsData[fieldName].push(cell.value)
+          }
+        })
+      }
+      extractedData.push({ sheetName:sheet.name, fieldsData })
+    }
+  })
+  return extractedData
 }
 
 const excelDataExtractor = {
+    getAllDataFromFile,
     getDataFromOneSheet,
     getDataFromAllSheets
 }
