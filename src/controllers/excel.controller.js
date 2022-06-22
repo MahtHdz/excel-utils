@@ -3,6 +3,9 @@ import myCustomStyleFunction from "../utils/customStyle"
 import excelDataExtractor from "../utils/excelDataExtractor"
 import excelDataProcessing from "../utils/excelDataProcessing"
 
+import { doNRectifications } from "../utils/excelCustomAudit"
+import dataTest from "./dataTest"
+
 const getDataFromFile = async (req, res) => {
     const { filepath } = req.body
     let WORKSHEETS_CONFIG = []
@@ -25,8 +28,16 @@ const getDataFromFile = async (req, res) => {
     res.send("Done")
 }
 
+const testArrays = async (req, res) => {
+  const PU501 = dataTest.PU501
+  const PUF701 = dataTest.PUF701
+  const PUA701 = dataTest.PUA701
+  res.send(doNRectifications(PU501, PUF701, PUA701))
+}
+
 const excelController = {
-    getDataFromFile
+  getDataFromFile,
+  testArrays
 }
 
 export default excelController
